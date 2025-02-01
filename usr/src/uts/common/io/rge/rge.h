@@ -179,6 +179,7 @@ enum {
 	PARAM_AUTONEG_CAP = 0,
 	PARAM_PAUSE_CAP,
 	PARAM_ASYM_PAUSE_CAP,
+	PARAM_2500FDX_CAP,
 	PARAM_1000FDX_CAP,
 	PARAM_1000HDX_CAP,
 	PARAM_100T4_CAP,
@@ -190,6 +191,7 @@ enum {
 	PARAM_ADV_AUTONEG_CAP,
 	PARAM_ADV_PAUSE_CAP,
 	PARAM_ADV_ASYM_PAUSE_CAP,
+	PARAM_ADV_2500FDX_CAP,
 	PARAM_ADV_1000FDX_CAP,
 	PARAM_ADV_1000HDX_CAP,
 	PARAM_ADV_100T4_CAP,
@@ -524,6 +526,7 @@ typedef struct rge {
 #define	param_adv_autoneg	nd_params[PARAM_ADV_AUTONEG_CAP].ndp_val
 #define	param_adv_pause		nd_params[PARAM_ADV_PAUSE_CAP].ndp_val
 #define	param_adv_asym_pause	nd_params[PARAM_ADV_ASYM_PAUSE_CAP].ndp_val
+#define	param_adv_2500fdx	nd_params[PARAM_ADV_2500FDX_CAP].ndp_val
 #define	param_adv_1000fdx	nd_params[PARAM_ADV_1000FDX_CAP].ndp_val
 #define	param_adv_1000hdx	nd_params[PARAM_ADV_1000HDX_CAP].ndp_val
 #define	param_adv_100fdx	nd_params[PARAM_ADV_100FDX_CAP].ndp_val

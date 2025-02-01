@@ -41,14 +41,17 @@ extern "C" {
 /*
  * Driver support device
  */
-#define	VENDOR_ID_REALTECK		0x10EC
+#define	VENDOR_ID_REALTEK		0x10EC
 #define	DEVICE_ID_8169			0x8169	/* PCI */
 #define	DEVICE_ID_8110			0x8169	/* PCI */
 #define	DEVICE_ID_8168			0x8168	/* PCI-E */
 #define	DEVICE_ID_8111			0x8168	/* PCI-E */
 #define	DEVICE_ID_8169SC		0x8167	/* PCI */
 #define	DEVICE_ID_8110SC		0x8167	/* PCI */
+#define	DEVICE_ID_8161			0x8161	/* PCI-E */
 #define	DEVICE_ID_8101E			0x8136	/* 10/100M PCI-E */
+#define	DEVICE_ID_8125			0x8125	/* 2.5G PCI-E */
+#define	DEVICE_ID_8126			0x8126	/* 5G PCI-E */
 
 #define	RGE_REGISTER_MAX		0x0100
 
@@ -113,6 +116,8 @@ extern "C" {
 #define	HIGH_TX_RING_POLL		0x80
 #define	NORMAL_TX_RING_POLL		0x40
 #define	FORCE_SW_INT			0x01
+#define	TX_RINGS_POLL_REG_8125		0x0090
+#define	NORMAL_TX_RING_POLL_8125	0x01
 
 /*
  * Interrupt mask & status register
@@ -139,6 +144,8 @@ extern "C" {
 #define	RGE_INT_MASK			(TX_OK_INT | TX_ERR_INT | \
 					    RGE_RX_INT | LINK_CHANGE_INT | \
 					    TIME_OUT_INT | SYS_ERR_INT)
+#define INT_MASK_REG_8125		0x38
+#define INT_STATUS_REG_8125		0x3C
 
 /*
  * Transmit configuration register
@@ -174,6 +181,21 @@ extern "C" {
 #define	MAC_VER_8101E			0x34000000
 #define	MAC_VER_8101E_B			0x24800000
 #define	MAC_VER_8101E_C			0x34800000
+
+/* These are derived from cross-referencing re_hw_mac_mcu_config()
+ * with MACFG_xx values in re_hw_start_unlock_8125() in the BSD driver
+*/
+#define	MAC_VER_8125_A1			0x60800000  // MACFG_80
+#define	MAC_VER_8125_A2			0x60900000  // MACFG_81
+#define	MAC_VER_8125_B1			0x64000000  // MACFG_82
+#define	MAC_VER_8125_B2			0x64100000  // MACFG_83
+#define	MAC_VER_8125_BP1		0x68000000  // MACFG_84
+#define	MAC_VER_8125_BP2		0x68100000  // MACFG_85
+#define	MAC_VER_8125_D1			0x68800000  // MACFG_86
+#define	MAC_VER_8125_D2			0x68900000  // MACFG_87
+#define	MAC_VER_8126_A1			0x64800000  // MACFG_90
+#define	MAC_VER_8126_A2			0x64900000  // MACFG_91
+#define	MAC_VER_8126_A3			0x64A00000  // MACFG_92
 
 #define	TX_CONFIG_DEFAULT		(TX_INTERFRAME_GAP_802_3 | \
 					    TX_DMA_BURST_1024B)
@@ -287,6 +309,10 @@ extern "C" {
  * PHY status register
  */
 #define	PHY_STATUS_REG			0x006c
+#define	PHY_STATUS_5000MF		0x1000
+#define	PHY_STATUS_5000MF_LITE		0x800
+#define	PHY_STATUS_2500MF		0x400
+#define	PHY_STATUS_1250MF		0x200
 #define	PHY_STATUS_TBI			0x80
 #define	PHY_STATUS_TX_FLOW		0x40
 #define	PHY_STATUS_RX_FLOW		0x20
@@ -296,6 +322,9 @@ extern "C" {
 #define	PHY_STATUS_LINK_UP		0x02
 #define	PHY_STATUS_DUPLEX_FULL		0x01
 
+#define	RGE_SPEED_5000M			5000
+#define	RGE_SPEED_2500M			2500
+#define	RGE_SPEED_1250M			1250
 #define	RGE_SPEED_1000M			1000
 #define	RGE_SPEED_100M			100
 #define	RGE_SPEED_10M			10
@@ -469,6 +498,16 @@ extern "C" {
 #define	PHY_0E_REG			0x0e
 #define	PHY_0C_REG			0x0c
 #define	PHY_0B_REG			0x0b
+
+/*
+ * RTL8125 registers used for getting the MAC address?
+ * this is used in re_get_hw_mac_address() in the BSD driver
+ */
+#define RE_BACKUP_ADDR0_8125 0x19E0
+#define RE_BACKUP_ADDR4_8125 0X19E4
+/* Driver currently doesn't support setting EEE */
+//#define RE_EEE_TXIDLE_TIMER_8125 0x6048
+
 
 /*
  * MII (PHY) registers, beyond those already defined in <sys/miiregs.h>

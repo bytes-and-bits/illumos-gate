@@ -48,7 +48,10 @@ extern "C" {
 #define	DEVICE_ID_8111			0x8168	/* PCI-E */
 #define	DEVICE_ID_8169SC		0x8167	/* PCI */
 #define	DEVICE_ID_8110SC		0x8167	/* PCI */
+#define	DEVICE_ID_8161			0x8161	/* PCI-E */
 #define	DEVICE_ID_8101E			0x8136	/* 10/100M PCI-E */
+#define	DEVICE_ID_8125			0x8125	/* 2.5G PCI-E */
+#define	DEVICE_ID_8126			0x8126	/* 5G PCI-E */
 
 #define	RGE_REGISTER_MAX		0x0100
 
@@ -113,6 +116,7 @@ extern "C" {
 #define	HIGH_TX_RING_POLL		0x80
 #define	NORMAL_TX_RING_POLL		0x40
 #define	FORCE_SW_INT			0x01
+#define	NORMAL_TX_RING_POLL_8125	0x01
 
 /*
  * Interrupt mask & status register
@@ -174,6 +178,12 @@ extern "C" {
 #define	MAC_VER_8101E			0x34000000
 #define	MAC_VER_8101E_B			0x24800000
 #define	MAC_VER_8101E_C			0x34800000
+
+/* These are best guesses from BSD code */
+#define	MAC_VER_8125_A1			0x60800000
+#define	MAC_VER_8125_A2			0x60900000
+#define	MAC_VER_8125_B1			0x64000000
+#define	MAC_VER_8125_B2			0x64100000
 
 #define	TX_CONFIG_DEFAULT		(TX_INTERFRAME_GAP_802_3 | \
 					    TX_DMA_BURST_1024B)
@@ -287,6 +297,10 @@ extern "C" {
  * PHY status register
  */
 #define	PHY_STATUS_REG			0x006c
+#define	PHY_STATUS_5000MF		0x1000
+#define	PHY_STATUS_5000MF_LITE		0x800
+#define	PHY_STATUS_2500MF		0x400
+#define	PHY_STATUS_1250MF		0x200
 #define	PHY_STATUS_TBI			0x80
 #define	PHY_STATUS_TX_FLOW		0x40
 #define	PHY_STATUS_RX_FLOW		0x20
@@ -296,6 +310,9 @@ extern "C" {
 #define	PHY_STATUS_LINK_UP		0x02
 #define	PHY_STATUS_DUPLEX_FULL		0x01
 
+#define	RGE_SPEED_5000M			5000
+#define	RGE_SPEED_2500M			2500
+#define	RGE_SPEED_1250M			1250
 #define	RGE_SPEED_1000M			1000
 #define	RGE_SPEED_100M			100
 #define	RGE_SPEED_10M			10

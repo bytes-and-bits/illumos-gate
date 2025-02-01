@@ -592,7 +592,7 @@ rge_phy_init(rge_t *rgep)
 	 */
 	switch (rgep->chipid.mac_ver) {
 	case MAC_VER_8169S_D:
-	case MAC_VER_8169S_E :
+	case MAC_VER_8169S_E:
 		rge_mii_put16(rgep, PHY_1F_REG, 0x0001);
 		rge_mii_put16(rgep, PHY_15_REG, 0x1000);
 		rge_mii_put16(rgep, PHY_18_REG, 0x65c7);

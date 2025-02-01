@@ -29,7 +29,7 @@
  * This is the string displayed by modinfo, etc.
  * Make sure you keep the version ID up to date!
  */
-static char rge_ident[] = "Realtek 1Gb Ethernet";
+static char rge_ident[] = "Realtek 1GbE/2.5GbE Ethernet";
 
 /*
  * Used for buffers allocated by ddi_dma_mem_alloc()

@@ -57,6 +57,7 @@ static char duplex_propname[] = "full-duplex";
  *	is used to count assignments so that we can tell when a magic
  *	parameter has been set via ndd (see rge_param_set()).
  */
+
 static const nd_param_t nd_template_1000[] = {
 /*	info		min	max	init	r/w+name		*/
 
@@ -136,6 +137,48 @@ static const nd_param_t nd_template_100[] = {
 { PARAM_COUNT,		    0,	  0,	0,	NULL			}
 };
 
+/* nd_template for RTL8125 */
+static const nd_param_t nd_template_2500[] = {
+/*	info		min	max	init	r/w+name		*/
+
+/* Our hardware capabilities */
+{ PARAM_AUTONEG_CAP,	    0,	  1,	1,	"-autoneg_cap"		},
+{ PARAM_PAUSE_CAP,	    0,	  1,	1,	"-pause_cap"		},
+{ PARAM_ASYM_PAUSE_CAP,	    0,	  1,	1,	"-asym_pause_cap"	},
+{ PARAM_2500FDX_CAP,	    0,	  1,	1,	"-2500fdx_cap"		},
+{ PARAM_1000FDX_CAP,	    0,	  1,	1,	"-1000fdx_cap"		},
+{ PARAM_1000HDX_CAP,	    0,	  1,	0,	"-1000hdx_cap"		},
+{ PARAM_100T4_CAP,	    0,	  1,	0,	"-100T4_cap"		},
+{ PARAM_100FDX_CAP,	    0,	  1,	1,	"-100fdx_cap"		},
+{ PARAM_100HDX_CAP,	    0,	  1,	1,	"-100hdx_cap"		},
+{ PARAM_10FDX_CAP,	    0,	  1,	1,	"-10fdx_cap"		},
+{ PARAM_10HDX_CAP,	    0,	  1,	1,	"-10hdx_cap"		},
+
+/* Our advertised capabilities */
+{ PARAM_ADV_AUTONEG_CAP,    0,	  1,	1,	"-adv_autoneg_cap"	},
+{ PARAM_ADV_PAUSE_CAP,	    0,	  1,	1,	"+adv_pause_cap"	},
+{ PARAM_ADV_ASYM_PAUSE_CAP, 0,	  1,	1,	"+adv_asym_pause_cap"	},
+{ PARAM_ADV_2500FDX_CAP,    0,	  1,	1,	"+adv_2500fdx_cap"	},
+{ PARAM_ADV_1000FDX_CAP,    0,	  1,	1,	"+adv_1000fdx_cap"	},
+{ PARAM_ADV_1000HDX_CAP,    0,	  1,	0,	"-adv_1000hdx_cap"	},
+{ PARAM_ADV_100T4_CAP,	    0,	  1,	0,	"-adv_100T4_cap"	},
+{ PARAM_ADV_100FDX_CAP,	    0,	  1,	1,	"+adv_100fdx_cap"	},
+{ PARAM_ADV_100HDX_CAP,	    0,	  1,	1,	"+adv_100hdx_cap"	},
+{ PARAM_ADV_10FDX_CAP,	    0,	  1,	1,	"+adv_10fdx_cap"	},
+{ PARAM_ADV_10HDX_CAP,	    0,	  1,	1,	"+adv_10hdx_cap"	},
+
+/* Current operating modes */
+{ PARAM_LINK_STATUS,	    0,	  1,	0,	"-link_status"		},
+{ PARAM_LINK_SPEED,	    0,    2500,	0,	"-link_speed"		},
+{ PARAM_LINK_DUPLEX,	    0,	  2,	0,	"-link_duplex"		},
+
+/* Loopback status */
+{ PARAM_LOOP_MODE,	    0,	  2,	0,	"-loop_mode"		},
+
+/* Terminator */
+{ PARAM_COUNT,		    0,	  0,	0,	NULL			}
+};
+
 /*  ============== NDD Support Functions ===============  */
 
 /*
@@ -198,10 +241,23 @@ rge_param_register(rge_t *rgep)
 	nddpp = &rgep->nd_data_p;
 	ASSERT(*nddpp == NULL);
 
-	if (rgep->chipid.mac_ver == MAC_VER_8101E)
+	switch (rgep->chipid.mac_ver) {
+	case MAC_VER_8101E:
 		tmplp = nd_template_100;
-	else
+		break;
+	case MAC_VER_8125_A1:
+	case MAC_VER_8125_A2:
+	case MAC_VER_8125_B1:
+	case MAC_VER_8125_B2:
+	case MAC_VER_8125_BP1:
+	case MAC_VER_8125_BP2:
+	case MAC_VER_8125_D1:
+	case MAC_VER_8125_D2:
+		tmplp = nd_template_2500;
+		break;
+	default:
 		tmplp = nd_template_1000;
+	}
 
 	for (; tmplp->ndp_name != NULL; ++tmplp) {
 		/*
@@ -247,12 +303,25 @@ rge_param_register(rge_t *rgep)
 	return (DDI_SUCCESS);
 
 nd_fail:
-	if (rgep->chipid.mac_ver == MAC_VER_8101E) {
-		RGE_DEBUG(("rge_param_register: FAILED at index %d [info %d]",
-		    tmplp-nd_template_100, tmplp->ndp_info));
-	} else {
-		RGE_DEBUG(("rge_param_register: FAILED at index %d [info %d]",
-		    tmplp-nd_template_1000, tmplp->ndp_info));
+	switch (rgep->chipid.mac_ver) {
+	case MAC_VER_8101E:
+	    RGE_DEBUG(("rge_param_register: FAILED at index %d [info %d]",
+		tmplp - nd_template_100, tmplp->ndp_info));
+	    break;
+	case MAC_VER_8125_A1:
+	case MAC_VER_8125_A2:
+	case MAC_VER_8125_B1:
+	case MAC_VER_8125_B2:
+	case MAC_VER_8125_BP1:
+	case MAC_VER_8125_BP2:
+	case MAC_VER_8125_D1:
+	case MAC_VER_8125_D2:
+	    RGE_DEBUG(("rge_param_register: FAILED at index %d [info %d]",
+		tmplp - nd_template_2500, tmplp->ndp_info));
+	    break;
+	default:
+	    RGE_DEBUG(("rge_param_register: FAILED at index %d [info %d]",
+		tmplp - nd_template_1000, tmplp->ndp_info));
 	}
 	nd_free(nddpp);
 	return (DDI_FAILURE);
@@ -289,8 +358,20 @@ rge_nd_init(rge_t *rgep)
 		    transfer_speed_propname, speed);
 
 		switch (speed) {
+		case 2500:
+			rgep->param_adv_autoneg = 1;
+			rgep->param_adv_2500fdx = 1;
+			rgep->param_adv_1000fdx = 0;
+			rgep->param_adv_1000hdx = 0;
+			rgep->param_adv_100fdx = 0;
+			rgep->param_adv_100hdx = 0;
+			rgep->param_adv_10fdx = 0;
+			rgep->param_adv_10hdx = 0;
+			break;
+
 		case 1000:
 			rgep->param_adv_autoneg = 1;
+			rgep->param_adv_2500fdx = 0;
 			rgep->param_adv_1000fdx = 1;
 			rgep->param_adv_1000hdx = 1;
 			rgep->param_adv_100fdx = 0;
@@ -301,6 +382,7 @@ rge_nd_init(rge_t *rgep)
 
 		case 100:
 			rgep->param_adv_autoneg = 1;
+			rgep->param_adv_2500fdx = 0;
 			rgep->param_adv_1000fdx = 0;
 			rgep->param_adv_1000hdx = 0;
 			rgep->param_adv_100fdx = 1;
@@ -311,6 +393,7 @@ rge_nd_init(rge_t *rgep)
 
 		case 10:
 			rgep->param_adv_autoneg = 1;
+			rgep->param_adv_2500fdx = 0;
 			rgep->param_adv_1000fdx = 0;
 			rgep->param_adv_1000hdx = 0;
 			rgep->param_adv_100fdx = 0;
@@ -335,6 +418,7 @@ rge_nd_init(rge_t *rgep)
 	    RGE_PROP_EXISTS(dip, duplex_propname)) {
 
 		rgep->param_adv_autoneg = 0;
+		rgep->param_adv_2500fdx = 1;
 		rgep->param_adv_1000fdx = 1;
 		rgep->param_adv_1000hdx = 1;
 		rgep->param_adv_100fdx = 1;
@@ -352,6 +436,16 @@ rge_nd_init(rge_t *rgep)
 		switch (speed) {
 		case 1000:
 		default:
+			rgep->param_adv_2500fdx = 0;
+			rgep->param_adv_100fdx = 0;
+			rgep->param_adv_100hdx = 0;
+			rgep->param_adv_10fdx = 0;
+			rgep->param_adv_10hdx = 0;
+			break;
+
+		case 2500:
+			rgep->param_adv_1000fdx = 0;
+			rgep->param_adv_1000hdx = 0;
 			rgep->param_adv_100fdx = 0;
 			rgep->param_adv_100hdx = 0;
 			rgep->param_adv_10fdx = 0;
@@ -359,6 +453,7 @@ rge_nd_init(rge_t *rgep)
 			break;
 
 		case 100:
+			rgep->param_adv_2500fdx = 0;
 			rgep->param_adv_1000fdx = 0;
 			rgep->param_adv_1000hdx = 0;
 			rgep->param_adv_10fdx = 0;
@@ -366,6 +461,7 @@ rge_nd_init(rge_t *rgep)
 			break;
 
 		case 10:
+			rgep->param_adv_2500fdx = 0;
 			rgep->param_adv_1000fdx = 0;
 			rgep->param_adv_1000hdx = 0;
 			rgep->param_adv_100fdx = 0;
@@ -391,11 +487,13 @@ rge_nd_init(rge_t *rgep)
 
 	RGE_DEBUG(("rge_nd_init: autoneg %d"
 	    "pause %d asym_pause %d "
+	    "2500fdx %d "
 	    "1000fdx %d 1000hdx %d "
 	    "100fdx %d 100hdx %d "
 	    "10fdx %d 10hdx %d ",
 	    rgep->param_adv_autoneg,
 	    rgep->param_adv_pause, rgep->param_adv_asym_pause,
+	    rgep->param_adv_2500fdx,
 	    rgep->param_adv_1000fdx, rgep->param_adv_1000hdx,
 	    rgep->param_adv_100fdx, rgep->param_adv_100hdx,
 	    rgep->param_adv_10fdx, rgep->param_adv_10hdx));

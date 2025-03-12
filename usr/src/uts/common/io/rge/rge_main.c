@@ -1615,6 +1615,9 @@ rge_attach(dev_info_t *devinfo, ddi_attach_cmd_t cmd)
 	(void) snprintf(rgep->ifname, sizeof (rgep->ifname), "%s%d",
 	    RGE_DRIVER_NAME, instance);
 
+	/* Where is the mtu_propname property set prior to this read */
+	RGE_GTRACE(("%s: default_mtu = %u", rgep->ifname, rgep->default_mtu));
+
 	/*
 	 * Map config space registers
 	 * Read chip ID & set up config space command register(s)

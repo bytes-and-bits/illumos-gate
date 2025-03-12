@@ -589,9 +589,11 @@ extern "C" {
 #define	RGE_SEND_SLOTS			1024
 #define	RGE_RECV_SLOTS			1024
 #define	RGE_BUFF_SIZE_STD		1536	/* 1536 bytes */
-#define	RGE_BUFF_SIZE_JUMBO		7168	/* maximum 7K */
-#define	RGE_JUMBO_SIZE			7014
+#define	RGE_BUFF_SIZE_JUMBO		9216	/* maximum 9K */
+#define	RGE_JUMBO_SIZE_7K		7014
+#define	RGE_JUMBO_SIZE_9K		9194	/* 9*1024 - (4+(2*6+2)+4 */
 #define	RGE_JUMBO_MTU			7000
+#define	RGE_JUMBO_MTU_9K		9216	/* 9*1024 in BSD if_revar.h */
 #define	RGE_STATS_DUMP_SIZE		64
 
 typedef struct rge_bd {

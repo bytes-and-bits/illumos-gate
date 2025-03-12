@@ -764,7 +764,7 @@ rge_chip_ident(rge_t *rgep)
 	if (rgep->default_mtu > ETHERMTU) {
 		rgep->rxbuf_size = RGE_BUFF_SIZE_JUMBO;
 		rgep->txbuf_size = RGE_BUFF_SIZE_JUMBO;
-		rgep->ethmax_size = RGE_JUMBO_SIZE;
+		rgep->ethmax_size = RGE_JUMBO_SIZE_7K;
 	} else {
 		rgep->rxbuf_size = RGE_BUFF_SIZE_STD;
 		rgep->txbuf_size = RGE_BUFF_SIZE_STD;

@@ -101,7 +101,7 @@ extern "C" {
 #define	HIGH_TX_RING_ADDR_HI_REG	0x002c
 
 /*
- * Commond register
+ * Command register
  */
 #define	RT_COMMAND_REG			0x0037
 #define	RT_COMMAND_RESV			0xe3
@@ -137,8 +137,8 @@ extern "C" {
 #define	RX_OK_INT			0x0001
 
 #define	INT_REG_RESV			0x3e00
-#define	INT_MASK_ALL			0xffff
-#define	INT_MASK_NONE			0x0000
+#define	INT_MASK_ALL			0xffffffff
+#define	INT_MASK_NONE			0x00000000
 #define	RGE_RX_INT			(RX_OK_INT | RX_ERR_INT | \
 					    NO_RXDESC_INT)
 #define	RGE_INT_MASK			(TX_OK_INT | TX_ERR_INT | \

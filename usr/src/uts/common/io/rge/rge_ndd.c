@@ -343,11 +343,11 @@ rge_nd_init(rge_t *rgep)
 		return (-1);
 
 	/*
-	 * The link speed may be forced to 10, 100 or 1000 Mbps using
-	 * the property "transfer-speed". This may be done in OBP by
+	 * The link speed may be forced to 10, 100, 1000, or 2500 Mbps
+	 * using the property "transfer-speed". This may be done in OBP by
 	 * using the command "apply transfer-speed=<speed> <device>".
-	 * The speed may be 10, 100 or 1000 - any other value will be
-	 * ignored.  Note that this does *enables* autonegotiation, but
+	 * The speed may be 10, 100, 1000, or 2500 - any other value will
+	 * be ignored.  Note that this does *enables* autonegotiation, but
 	 * restricts it to the speed specified by the property.
 	 */
 	dip = rgep->devinfo;

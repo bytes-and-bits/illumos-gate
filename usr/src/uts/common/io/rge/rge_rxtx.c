@@ -677,7 +677,7 @@ rge_reschedule(caddr_t arg1, caddr_t arg2)
 		 * if there are untransmitted packets after tx interrupts
 		 * occur.
 		 */
-		rge_tx_trigger(rgep);
+		rgep->rge_tx_trigger(rgep);
 	}
 
 	return (DDI_INTR_CLAIMED);
@@ -717,7 +717,7 @@ rge_m_tx(void *arg, mblk_t *mp)
 		mp = next;
 	}
 	if (mp != mp_org) {
-		rge_tx_trigger(rgep);
+		rgep->rge_tx_trigger(rgep);
 	}
 	rw_exit(rgep->errlock);
 

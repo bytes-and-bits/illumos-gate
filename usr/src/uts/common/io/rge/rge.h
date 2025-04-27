@@ -408,6 +408,14 @@ typedef struct rge {
 	chip_id_t		chipid;
 
 	/*
+	 * 
+	 */
+	void			(*rge_tx_trigger)(struct rge*);
+	void			(*rge_write_imr)(struct rge*, uint32_t);
+	void			(*rge_write_isr)(struct rge*, uint32_t);
+	uint32_t		(*rge_read_isr)(struct rge*);
+
+	/*
 	 * These structures describe the blocks of memory allocated during
 	 * attach().  They remain unchanged thereafter, although the memory
 	 * they describe is carved up into various separate regions and may
@@ -419,7 +427,7 @@ typedef struct rge {
 				/* describes hardware statistics area	*/
 
 	uint8_t			netaddr[ETHERADDRL];	/* mac address	*/
-	uint16_t		int_mask;	/* interrupt mask	*/
+	uint32_t		int_mask;	/* interrupt mask	*/
 
 	/* used for multicast/promisc mode set */
 	char			mcast_refs[RGE_MCAST_BUF_SIZE];

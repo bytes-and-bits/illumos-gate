@@ -686,6 +686,10 @@ rge_phy_init(rge_t *rgep)
 		rge_mii_put16(rgep, PHY_1F_REG, 0x0000);
 		break;
 	}
+
+	/* TODO port over PHY config for RTL8125 from BSD netif/re/re.c
+	 * re_hw_phy_config()
+	 */
 }
 
 void rge_chip_ident(rge_t *rgep);
@@ -849,12 +853,12 @@ rge_chip_reset(rge_t *rgep)
 	 * Disable interrupt
 	 */
 	rgep->int_mask = INT_MASK_NONE;
-	rge_reg_put16(rgep, INT_MASK_REG, rgep->int_mask);
+	rgep->rge_write_imr(rgep, rgep->int_mask);
 
 	/*
 	 * Clear pended interrupt
 	 */
-	rge_reg_put16(rgep, INT_STATUS_REG, INT_MASK_ALL);
+	rgep->rge_write_isr(rgep, INT_MASK_ALL);
 
 	/*
 	 * Reset chip
@@ -912,6 +916,24 @@ rge_chip_init(rge_t *rgep)
 		rge_reg_put32(rgep, RT_CSI_DATA_REG, val32);
 		rge_reg_put32(rgep, RT_CSI_ACCESS_REG, 0x8000f068);
 	}
+
+	switch (chip->mac_ver)
+	{
+	case MAC_VER_8125_A1:
+	case MAC_VER_8125_A2:
+	case MAC_VER_8125_B1:
+	case MAC_VER_8125_B2:
+	case MAC_VER_8125_BP1:
+	case MAC_VER_8125_BP2:
+	case MAC_VER_8125_D1:
+	case MAC_VER_8125_D2:
+		rgep->rge_tx_trigger = rge_tx_trigger_8125;
+		break;
+	default:
+		rgep->rge_tx_trigger = rge_tx_trigger;
+		break;
+	}
+
 
 	/*
 	 * Config MII register
@@ -1075,7 +1097,7 @@ rge_chip_start(rge_t *rgep)
 	}
 	rgep->rx_fifo_ovf = 0;
 	rgep->int_mask |= RX_FIFO_OVERFLOW_INT;
-	rge_reg_put16(rgep, INT_MASK_REG, rgep->int_mask);
+	rgep->rge_write_imr(rgep, rgep->int_mask);
 
 	/*
 	 * All done!
@@ -1100,20 +1122,20 @@ rge_chip_stop(rge_t *rgep, boolean_t fault)
 	 * Disable interrupt
 	 */
 	rgep->int_mask = INT_MASK_NONE;
-	rge_reg_put16(rgep, INT_MASK_REG, rgep->int_mask);
+	rgep->rge_write_imr(rgep, rgep->int_mask);
 
 	/*
 	 * Clear pended interrupt
 	 */
 	if (!rgep->suspended) {
-		rge_reg_put16(rgep, INT_STATUS_REG, INT_MASK_ALL);
+		rgep->rge_write_isr(rgep, INT_MASK_ALL);
 	}
 
 	/*
 	 * Stop the board and disable transmit/receive
 	 */
 	rge_reg_clr8(rgep, RT_COMMAND_REG,
-	    RT_COMMAND_RX_ENABLE | RT_COMMAND_TX_ENABLE);
+		RT_COMMAND_RX_ENABLE | RT_COMMAND_TX_ENABLE);
 
 	if (fault)
 		rgep->rge_chip_state = RGE_CHIP_FAULT;
@@ -1299,6 +1321,53 @@ rge_tx_trigger(rge_t *rgep)
 	rge_reg_put8(rgep, TX_RINGS_POLL_REG, NORMAL_TX_RING_POLL);
 }
 
+void rge_tx_trigger_8125(rge_t* rgep);
+#pragma	no_inline(rge_tx_trigger_8125)
+
+void
+rge_tx_trigger_8125(rge_t* rgep)
+{
+	rge_reg_put16(rgep, TX_RINGS_POLL_REG_8125, NORMAL_TX_RING_POLL_8125);
+}
+
+uint32_t rge_read_isr(rge_t* rgep);
+#pragma	no_inline(rge_read_isr)
+
+uint32_t
+rge_read_isr(rge_t* rgep)
+{
+	rge_reg_get16(rgep, INT_STATUS_REG);
+}
+
+uint32_t rge_read_isr_8125(rge_t* rgep);
+#pragma	no_inline(rge_read_isr_8125)
+
+uint32_t
+rge_read_isr_8125(rge_t* rgep)
+{
+	rge_reg_get32(rgep, INT_STATUS_REG_8125);
+}
+
+void rge_write_isr(rge_t* rgep, uint32_t val);
+#pragma	no_inline(rge_write_isr)
+
+void
+rge_write_isr(rge_t* rgep, uint32_t val)
+{
+	rge_reg_put16(rgep, INT_STATUS_REG, val);
+}
+
+void rge_write_isr_8125(rge_t* rgep, uint32_t val);
+#pragma	no_inline(rge_write_isr_8125)
+
+void
+rge_write_isr_8125(rge_t* rgep, uint32_t val)
+{
+	rge_reg_put32(rgep, INT_STATUS_REG_8125, val);
+}
+
+
+
 void rge_hw_stats_dump(rge_t *rgep);
 #pragma	no_inline(rge_tx_trigger)
 
@@ -1358,7 +1427,7 @@ uint_t
 rge_intr(caddr_t arg1, caddr_t arg2)
 {
 	rge_t *rgep = (rge_t *)arg1;
-	uint16_t int_status;
+	uint32_t int_status;
 	clock_t	now;
 	uint32_t tx_pkts;
 	uint32_t rx_pkts;
@@ -1380,11 +1449,12 @@ rge_intr(caddr_t arg1, caddr_t arg2)
 	/*
 	 * Was this interrupt caused by our device...
 	 */
+	int_status = rgep->rge_read_isr(rgep);
 	int_status = rge_reg_get16(rgep, INT_STATUS_REG);
 	if (!(int_status & rgep->int_mask)) {
 		mutex_exit(rgep->genlock);
 		return (DDI_INTR_UNCLAIMED);
-				/* indicate it wasn't our interrupt */
+		/* indicate it wasn't our interrupt */
 	}
 	rgep->stats.intr++;
 
@@ -1393,10 +1463,10 @@ rge_intr(caddr_t arg1, caddr_t arg2)
 	 *	For PCIE chipset, we need disable interrupt first.
 	 */
 	if (rgep->chipid.is_pcie) {
-		rge_reg_put16(rgep, INT_MASK_REG, INT_MASK_NONE);
+		rgep->rge_write_imr(rgep, INT_MASK_NONE);
 		update_int_mask = B_TRUE;
 	}
-	rge_reg_put16(rgep, INT_STATUS_REG, int_status);
+	rgep->rge_write_isr(rgep, int_status);
 
 	/*
 	 * Calculate optimal polling interval
@@ -1476,7 +1546,7 @@ rge_intr(caddr_t arg1, caddr_t arg2)
 	}
 
 	/* flush post writes */
-	(void) rge_reg_get16(rgep, INT_STATUS_REG);
+	(void) (rgep->rge_read_isr(rgep));
 
 	/*
 	 * Cable link change interrupt
@@ -1536,7 +1606,7 @@ rge_intr(caddr_t arg1, caddr_t arg2)
 	 * Re-enable interrupt for PCIE chipset or install new int_mask
 	 */
 	if (update_int_mask)
-		rge_reg_put16(rgep, INT_MASK_REG, rgep->int_mask);
+		rgep->rge_write_imr(rgep, rgep->int_mask);
 
 	return (DDI_INTR_CLAIMED);	/* indicate it was our interrupt */
 }
